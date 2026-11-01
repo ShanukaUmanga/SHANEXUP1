@@ -1,9 +1,51 @@
-sock.ev.on('connection.update', async (update) => {
+const { default: makeWASocket, useMultiFileAuthState, delay, DisconnectReason, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys');
+const pino = require('pino');
+const { Boom } = require('@hapi/boom');
+const fs = require('fs');
+const express = require('express');
+const router = express.Router();
+const pinoLogger = pino({ level: 'silent' });
+
+function removeFile(FilePath) {
+    if (!fs.existsSync(FilePath)) return false;
+    fs.rmSync(FilePath, { recursive: true, force: true });
+}
+
+router.get('/', async (req, res) => {
+    let num = req.query.number;
+    if (!num) {
+        return res.json({ error: "Please provide a valid WhatsApp number!" });
+    }
+
+    async function ShanexPairCode() {
+        const { state, saveCreds } = await useMultiFileAuthState(`./session`);
+        try {
+            let sock = makeWASocket({
+                auth: {
+                    creds: state.creds,
+                    keys: makeCacheableSignalKeyStore(state.keys, pinoLogger),
+                },
+                printQRInTerminal: false,
+                logger: pinoLogger,
+                browser: ["Chrome", "Desktop", "10.0"]
+            });
+
+            if (!sock.authState.creds.registered) {
+                await delay(1500);
+                num = num.replace(/[^0-9]/g, '');
+                let code = await sock.requestPairingCode(num);
+                code = code?.match(/.{1,4}/g)?.join("-") || code;
+                if (!res.headersSent) {
+                    res.json({ code });
+                }
+            }
+
+            sock.ev.on('connection.update', async (update) => {
                 const { connection, lastDisconnect } = update;
                 if (connection === 'open') {
                     await delay(5000);
                     console.log("Pairing Connected successfully!");
-                    // process.exit(0);  <--- මේක සම්පූර්ණයෙන්ම ඉවත් කරන්න!
+                    // process.exit(0) ඉවත් කර ඇත. දැන් සර්වර් එක ඕෆ් වන්නේ නැත.
                 } else if (connection === 'close') {
                     let reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
                     if (reason === DisconnectReason.connectionClosed) {
@@ -14,3 +56,18 @@ sock.ev.on('connection.update', async (update) => {
                     }
                 }
             });
+
+            sock.ev.on('creds.update', saveCreds);
+
+        } catch (err) {
+            console.log("Service error:", err);
+            removeFile('./session');
+            if (!res.headersSent) {
+                res.json({ error: "Service Unavailable" });
+            }
+        }
+    }
+    return await ShanexPairCode();
+});
+
+module.exports = router;
