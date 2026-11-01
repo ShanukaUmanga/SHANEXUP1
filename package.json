@@ -7,24 +7,10 @@
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": [
-    "Queen",
-    "whatsapp",
-    "queen-md",
-    "wabase-md",
-    "base",
-    "baileys-md",
-    "bot",
-    "bot-md",
-    "multi-device"
-  ],
-  "author": "DarkWinzo (Isuru Lakshan)",
-  "license": "MIT",
   "dependencies": {
     "@adiwajshing/baileys": "^4.4.0",
     "@adiwajshing/keyed-db": "^0.2.4",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "@whiskeysockets/baileys": "^6.7.0",
     "awesome-phonenumber": "^2.64.0",
     "axios": "^0.24.0",
     "chalk": "^4.1.2",
@@ -60,17 +46,5 @@
     "yargs": "^17.2.1",
     "yt-search": "^2.10.3"
   },
-  "directories": {
-    "lib": "lib",
-    "src": "src"
-  },
-  "devDependencies": {},
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ShanukaUmanga/SHANEXUP1.git"
-  },
-  "bugs": {
-    "url": "https://github.com/DarkWinzo/Queen-MD/issues"
-  },
-  "homepage": "https://github.com/DarkWinzo/Queen-MD#readme"
+  "devDependencies": {}
 }
